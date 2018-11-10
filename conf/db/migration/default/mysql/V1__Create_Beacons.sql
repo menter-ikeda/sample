@@ -1,4 +1,4 @@
-CREATE TABLE `beacon` (
+CREATE TABLE `beacons` (
   `id`                             BIGINT AUTO_INCREMENT NOT NULL,
   `serial`                         CHAR(9)               NOT NULL,
   `ble_address`                    CHAR(12)              NOT NULL,

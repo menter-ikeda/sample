@@ -1,19 +1,48 @@
 package controllers
 
-import javax.inject._
+import javax.inject.Inject
+import models.Beacon
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{JsPath, Json, Writes}
 import play.api.mvc._
 
 @Singleton
 class BeaconController @Inject()(components: ControllerComponents)
   extends AbstractController(components) {
 
-  def echo: Action[AnyContent] = Action { request =>
-    val crud = request.queryString("crud").head
-    val process = request.queryString("process").head
-    val serial = request.queryString("serial").head
-    val bleAddress = request.queryString("bleAddress").head
-    val ng = request.queryString("ng").head
+  case class BeaconResult(existsBeaconFindBySerial: Boolean,
+                          existsBeaconFindByBLEAddress: Boolean,
+                          existsVisualInspectionDefectiveAt: Boolean = false)
 
-    Ok(s"crud = $crud",s"process = $process",s"serial = $serial",s"bleAddress = $bleAddress",s"ng = $ng")
+  def readFinishedProductInspection(serial: String, bleAddress: String): List[BeaconResult] = {
+    val beaconFindBySerialAndBLEAddress = Beacon.findBySerialAndBLEAddress(serial, bleAddress).getOrElse(None)
+    val beaconFindBySerial = Beacon.findBySerial(serial).getOrElse(None)
+    val beaconFindByBLEAddress = Beacon.findByBLEAddress(bleAddress).getOrElse(None)
+
+    if (beaconFindBySerialAndBLEAddress.isDefined) {
+      List(BeaconResult(true, true))
+    } else if (beaconFindBySerial.isDefined) {
+      List(BeaconResult(true, false))
+    } else if (beaconFindByBLEAddress.isDefined) {
+      beaconFindByBLEAddress.get.visualInspectionDefectiveAt match {
+        case Some(_) => List(BeaconResult(true, false, true))
+        case None => List(BeaconResult(true, false, false))
+      }
+    } else {
+      List(BeaconResult(false, false))
+    }
   }
+
+  implicit val beaconResultWrites: Writes[BeaconResult] = (
+    (JsPath \ "existsBeaconFindBySerial").write[Boolean] and
+      (JsPath \ "existsBeaconFindByBLEAddress").write[Boolean] and
+      (JsPath \ "existsVisualInspectionDefectiveAt").write[Boolean]
+    ) (unlift(BeaconResult.unapply))
+
+  def index(serial: String, bleAddress: String) = Action { implicit request: Request[AnyContent] =>
+    val json = Json.toJson(readFinishedProductInspection(serial, bleAddress))
+    Ok(json)
+  }
+
+
 }
