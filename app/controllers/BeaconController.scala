@@ -1,6 +1,6 @@
 package controllers
 
-import javax.inject.Inject
+import javax.inject._
 import models.Beacon
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Json, Writes}
@@ -33,11 +33,16 @@ class BeaconController @Inject()(components: ControllerComponents)
     }
   }
 
-  implicit val beaconResultWrites: Writes[BeaconResult] = (
-    (JsPath \ "existsBeaconFindBySerial").write[Boolean] and
-      (JsPath \ "existsBeaconFindByBLEAddress").write[Boolean] and
-      (JsPath \ "existsVisualInspectionDefectiveAt").write[Boolean]
-    ) (unlift(BeaconResult.unapply))
+  implicit val beaconResultWrites: Writes[BeaconResult] = {
+    new Writes[BeaconResult] {
+      def writes(beaconResult: BeaconResult) =
+        Json.obj(
+          "existsBeaconFindBySerial" -> beaconResult.existsBeaconFindBySerial,
+          "existsBeaconFindByBLEAddress" -> beaconResult.existsBeaconFindByBLEAddress,
+          "existsVisualInspectionDefectiveAt" -> beaconResult.existsVisualInspectionDefectiveAt
+        )
+    }
+  }
 
   def index(serial: String, bleAddress: String) = Action { implicit request: Request[AnyContent] =>
     val json = Json.toJson(readFinishedProductInspection(serial, bleAddress))

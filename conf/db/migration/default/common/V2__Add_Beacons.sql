@@ -1,1 +1,4 @@
-INSERT INTO beacons (serial,ble_address,ng,finished_product_inspection_at,packaging_at,visual_inspection_defective_at,create_at,update_at) VALUES ('a','a',1,now,None,None,now,now);
+INSERT INTO beacons
+(serial,ble_address,ng)
+VALUES
+('a','a',0);

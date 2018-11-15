@@ -1,3 +1,3 @@
 DROP DATABASE IF EXISTS `beacon`;
 CREATE DATABASE `beacon` DEFAULT CHARSET utf8 COLLATE utf8_bin;
-GRANT ALL PRIVILEGES ON `beacon`.* TO beacon@192.168.10.5 IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON `beacon`.* TO beacon@localhost IDENTIFIED BY 'password';
